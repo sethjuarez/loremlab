@@ -6,7 +6,14 @@ import sys
 from pathlib import Path
 
 from docxer.converter import convert_file, convert_markdown_to_docx
+from docxer.foundry import (
+    get_cached_client,
+    get_cached_credential,
+    get_openai_client,
+    get_project_client,
+)
 from docxer.generator import (
+    FoundryModelClient,
     ModelClient,
     PromptContext,
     StubModelClient,
@@ -27,9 +34,15 @@ __all__ = [
     "generate_content",
     "load_prompt",
     "render_instructions",
+    "FoundryModelClient",
     "ModelClient",
     "PromptContext",
     "StubModelClient",
+    # Foundry
+    "get_cached_client",
+    "get_cached_credential",
+    "get_openai_client",
+    "get_project_client",
     # Orchestrator
     "generate_documents",
     "run_project",
@@ -65,6 +78,9 @@ def cmd_convert(args: argparse.Namespace) -> None:
 
 def cmd_generate(args: argparse.Namespace) -> None:
     """Handle the generate subcommand."""
+    import asyncio
+
+    from docxer.generator import FoundryModelClient, StubModelClient
     from docxer.orchestrator import run_project
 
     project_path = Path(args.project)
@@ -73,8 +89,13 @@ def cmd_generate(args: argparse.Namespace) -> None:
         print(f"Error: Project file '{project_path}' not found.", file=sys.stderr)
         sys.exit(1)
 
+    # Use real model if --live flag is set
+    client = FoundryModelClient() if args.live else StubModelClient()
+
     try:
-        results = run_project(project_path, verbose=not args.quiet)
+        results = asyncio.run(
+            run_project(project_path, client=client, verbose=not args.quiet)
+        )
         if args.quiet:
             for path in results:
                 print(path)
@@ -189,18 +210,18 @@ kinds:
 
         print(f"Created project '{args.name}' with structure:")
         print(f"  {project_dir}/")
-        print(f"  ├── project.yaml")
-        print(f"  ├── seed/")
-        print(f"  │   └── sample-data.md")
-        print(f"  ├── prompts/")
+        print("  ├── project.yaml")
+        print("  ├── seed/")
+        print("  │   └── sample-data.md")
+        print("  ├── prompts/")
         if prompts_src.exists():
             for prompt_file in sorted((project_dir / "prompts").glob("*.yaml")):
                 print(f"  │   └── {prompt_file.name}")
-        print(f"  └── output/")
+        print("  └── output/")
         print()
         print("Next steps:")
-        print(f"  1. Edit seed/*.md files with your domain data")
-        print(f"  2. Customize project.yaml goals and kinds")
+        print("  1. Edit seed/*.md files with your domain data")
+        print("  2. Customize project.yaml goals and kinds")
         print(f"  3. Run: docxer generate {project_dir}/project.yaml")
 
     except Exception as e:
@@ -255,6 +276,11 @@ def main() -> None:
         "--quiet",
         action="store_true",
         help="Only output generated file paths",
+    )
+    generate_parser.add_argument(
+        "--live",
+        action="store_true",
+        help="Use Azure AI Foundry to generate real content (requires FOUNDRY_PROJECT env var)",
     )
 
     # Init command

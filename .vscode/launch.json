@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Generate Docs (Live)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/docxer/src/docxer/__init__.py",
+      "args": ["generate", "examples/hr-policies/project.yaml", "--live"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/docxer",
+      "envFile": "${workspaceFolder}/docxer/.env",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/docxer/src"
+      }
+    },
+    {
+      "name": "Generate Docs (Stub)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/docxer/src/docxer/__init__.py",
+      "args": ["generate", "examples/hr-policies/project.yaml"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/docxer",
+      "envFile": "${workspaceFolder}/docxer/.env",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/docxer/src"
+      }
+    },
+    {
+      "name": "Convert Markdown",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/docxer/src/docxer/__init__.py",
+      "args": ["convert", "${file}"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/docxer",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/docxer/src"
+      }
+    },
+    {
+      "name": "Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/docxer",
+      "envFile": "${workspaceFolder}/docxer/.env",
+      "justMyCode": true,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/docxer/src"
+      }
+    }
+  ]
+}
+

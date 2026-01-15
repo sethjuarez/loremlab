@@ -2,10 +2,16 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
+from docxer.foundry import get_openai_client
 import yaml
 from agentschema.core import AgentDefinition, PromptAgent
+from dotenv import load_dotenv
+from openai.types.responses import EasyInputMessageParam, ResponseInputItemParam
+
+
+load_dotenv()
 
 
 @dataclass
@@ -79,11 +85,63 @@ def render_instructions(agent: PromptAgent, context: PromptContext) -> str:
     return rendered
 
 
+def parse_instructions(rendered: str) -> tuple[str, str]:
+    """Parse rendered instructions into system and user messages.
+
+    Instructions may contain 'system:' and 'user:' sections.
+    If not found, the entire content is treated as a user message.
+
+    Args:
+        rendered: The rendered instructions string.
+
+    Returns:
+        Tuple of (system_message, user_message).
+    """
+    system_msg = ""
+    user_msg = rendered
+
+    # Look for system: and user: markers
+    if "system:" in rendered.lower():
+        # Find the start of system section
+        lower = rendered.lower()
+        system_start = lower.find("system:")
+
+        # Find where user section starts (if present)
+        user_start = lower.find("user:", system_start)
+
+        if user_start != -1:
+            # Extract system content (after "system:" marker)
+            system_content_start = system_start + len("system:")
+            system_msg = rendered[system_content_start:user_start].strip()
+
+            # Extract user content (after "user:" marker)
+            user_content_start = user_start + len("user:")
+            user_msg = rendered[user_content_start:].strip()
+        else:
+            # Only system section, no user section
+            system_content_start = system_start + len("system:")
+            system_msg = rendered[system_content_start:].strip()
+            user_msg = ""
+    elif "user:" in rendered.lower():
+        # Only user section
+        lower = rendered.lower()
+        user_start = lower.find("user:")
+        user_content_start = user_start + len("user:")
+        user_msg = rendered[user_content_start:].strip()
+
+    return system_msg, user_msg
+
+
 class ModelClient(Protocol):
     """Protocol for model clients that can generate content."""
 
-    def generate(self, prompt: str) -> str:
-        """Generate content from a prompt."""
+    async def generate(self, prompt: str, model: str | None = None) -> str:
+        """Generate content from a prompt.
+
+        Args:
+            prompt: The prompt to send to the model.
+            model: Optional model identifier to use. Implementation decides default.
+        """
         ...
 
 
@@ -93,10 +151,12 @@ class StubModelClient:
     def __init__(self, return_stub_content: bool = True) -> None:
         self.return_stub_content = return_stub_content
         self.last_prompt: str | None = None
+        self.last_model: str | None = None
 
-    def generate(self, prompt: str) -> str:
+    async def generate(self, prompt: str, model: str | None = None) -> str:
         """Return stub content with the rendered prompt embedded."""
         self.last_prompt = prompt
+        self.last_model = model
 
         if self.return_stub_content:
             # Return a placeholder markdown document
@@ -137,7 +197,64 @@ veritatis et quasi architecto beatae vitae dicta sunt explicabo.
             return "<!-- STUB: Model call would happen here -->"
 
 
-def generate_content(
+class FoundryModelClient:
+    """Model client using Azure AI Foundry's Responses API."""
+
+    DEFAULT_MODEL = "gpt-4o"
+
+    def __init__(self) -> None:
+        """Initialize the Foundry model client."""
+        self.last_prompt: str | None = None
+        self.last_model: str | None = None
+
+    async def generate(self, prompt: str, model: str | None = None) -> str:
+        """Generate content using the Responses API.
+
+        Args:
+            prompt: The prompt to send to the model (may contain system:/user: sections).
+            model: Model identifier from prompt file. Falls back to DEFAULT_MODEL.
+
+        Returns:
+            The generated text content.
+        """
+        self.last_prompt = prompt
+        self.last_model = model or self.DEFAULT_MODEL
+
+        # Parse into system and user messages
+        system_msg, user_msg = parse_instructions(prompt)
+
+        # Build messages array with proper types
+        messages: list[EasyInputMessageParam] = []
+        if system_msg:
+            messages.append(
+                {"role": "system", "content": system_msg, "type": "message"}
+            )
+        if user_msg:
+            messages.append({"role": "user", "content": user_msg, "type": "message"})
+
+        # Fallback if no messages parsed
+        if not messages:
+            messages.append({"role": "user", "content": prompt, "type": "message"})
+
+        client = await get_openai_client()
+
+        # Cast to list[ResponseInputItemParam] for API compatibility
+        input_messages = cast(list[ResponseInputItemParam], messages)
+
+        try:
+            response = await client.responses.create(
+                model=self.last_model,
+                input=input_messages,
+            )
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to generate content with model '{self.last_model}': {e}"
+            ) from e
+
+        return response.output_text or ""
+
+
+async def generate_content(
     prompt_path: str | Path,
     context: PromptContext,
     client: ModelClient | None = None,
@@ -158,8 +275,13 @@ def generate_content(
     # Load the prompt using the agentschema package
     agent = load_prompt(prompt_path)
 
+    # Extract model from prompt file if available
+    model_id: str | None = None
+    if agent.model and agent.model.id:
+        model_id = agent.model.id
+
     # Render the instructions with context
     rendered_prompt = render_instructions(agent, context)
 
-    # Generate content
-    return client.generate(rendered_prompt)
+    # Generate content with the model from the prompt
+    return await client.generate(rendered_prompt, model=model_id)

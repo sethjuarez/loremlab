@@ -12,7 +12,7 @@ metadata:
     - document-generation
     - memo
 
-model: gpt-4o
+model: gpt-5.2
 
 inputSchema:
   properties:

@@ -1,7 +1,7 @@
 """Batch document generation orchestrator."""
 
 from pathlib import Path
-from typing import Iterator
+from typing import AsyncIterator
 
 from docxer.converter import convert_markdown_to_docx
 from docxer.generator import (
@@ -13,11 +13,11 @@ from docxer.generator import (
 from docxer.project import ProjectConfig
 
 
-def generate_documents(
+async def generate_documents(
     config: ProjectConfig,
     client: ModelClient | None = None,
     verbose: bool = False,
-) -> Iterator[tuple[str, Path]]:
+) -> AsyncIterator[tuple[str, Path]]:
     """Generate all documents defined in a project configuration.
 
     Args:
@@ -69,7 +69,7 @@ def generate_documents(
             )
 
             # Generate markdown content
-            markdown_content = generate_content(kind.prompt, context, client)
+            markdown_content = await generate_content(kind.prompt, context, client)
 
             # Convert to Word document
             doc = convert_markdown_to_docx(markdown_content)
@@ -89,7 +89,7 @@ def generate_documents(
         print(f"Done! Generated {document_number} document(s).")
 
 
-def run_project(
+async def run_project(
     project_path: str | Path,
     client: ModelClient | None = None,
     verbose: bool = True,
@@ -105,5 +105,5 @@ def run_project(
         List of paths to generated documents.
     """
     config = ProjectConfig.from_yaml(project_path)
-    results = list(generate_documents(config, client, verbose))
+    results = [item async for item in generate_documents(config, client, verbose)]
     return [path for _, path in results]
