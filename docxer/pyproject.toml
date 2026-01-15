@@ -1,0 +1,17 @@
+[project]
+name = "docxer"
+version = "0.1.0"
+description = "Convert GitHub-flavored Markdown to Microsoft Word documents"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "mistune>=3.2.0",
+    "python-docx>=1.2.0",
+]
+
+[project.scripts]
+docxer = "docxer:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
