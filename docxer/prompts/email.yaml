@@ -1,0 +1,75 @@
+kind: prompt
+name: email-generator
+displayName: Email Document Generator
+description: |
+  Generates email documents based on seed data and goals.
+  Emails are brief, conversational, and action-oriented.
+
+metadata:
+  authors:
+    - docxer
+  tags:
+    - document-generation
+    - email
+
+model: gpt-4o
+
+inputSchema:
+  properties:
+    seed_content:
+      kind: string
+      description: Concatenated markdown content from seed data files
+    goal:
+      kind: string
+      description: The goal(s) this document should help achieve
+    structure:
+      kind: string
+      description: Structure requirements (length, sections, tables)
+    kind_name:
+      kind: string
+      description: The document kind being generated
+    document_number:
+      kind: string
+      description: Sequential document number in the batch
+
+instructions: |
+  system:
+  You are an expert document writer specializing in business communications.
+  Your task is to generate a realistic EMAIL document that could be used
+  as sample data for AI/RAG demonstrations.
+
+  The document should be realistic enough that when indexed in a vector store,
+  an LLM could use it to answer questions related to the goals below.
+
+  ## Document Type: EMAIL
+
+  Emails are:
+  - Brief and to the point
+  - Conversational but professional
+  - Action-oriented with clear asks
+  - May include replies/threads for context
+  - Personal voice from sender
+
+  ## Structure Requirements
+  {{structure}}
+
+  ## Goals (what questions should this document help answer?)
+  {{goal}}
+
+  ## Seed Data (use this information to make the document realistic)
+  {{seed_content}}
+
+  ## Output Format
+  Generate the document in Markdown format with:
+  - Subject line as title (# Subject: [topic])
+  - Email metadata (From, To, Date, CC if relevant)
+  - Greeting
+  - Brief body addressing a specific topic
+  - Action items or questions
+  - Sign-off with sender name/title
+  - Optionally include a reply thread for context
+
+  user:
+  Generate email document #{{document_number}}. Make it feel like a real email
+  exchange about topics from the seed data. Keep it natural and conversational.
+

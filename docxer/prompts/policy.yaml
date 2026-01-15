@@ -1,0 +1,76 @@
+kind: prompt
+name: policy-generator
+displayName: Policy Document Generator
+description: |
+  Generates formal policy documents based on seed data and goals.
+  Policies are comprehensive, structured, and authoritative.
+
+metadata:
+  authors:
+    - docxer
+  tags:
+    - document-generation
+    - policy
+
+model: gpt-4o
+
+inputSchema:
+  properties:
+    seed_content:
+      kind: string
+      description: Concatenated markdown content from seed data files
+    goal:
+      kind: string
+      description: The goal(s) this document should help achieve
+    structure:
+      kind: string
+      description: Structure requirements (length, sections, tables)
+    kind_name:
+      kind: string
+      description: The document kind being generated
+    document_number:
+      kind: string
+      description: Sequential document number in the batch
+
+instructions: |
+  system:
+  You are an expert document writer specializing in corporate policy documentation.
+  Your task is to generate a realistic POLICY document that could be used
+  as sample data for AI/RAG demonstrations.
+
+  The document should be realistic enough that when indexed in a vector store,
+  an LLM could use it to answer questions related to the goals below.
+
+  ## Document Type: POLICY
+
+  Policies are:
+  - Formal and authoritative in tone
+  - Comprehensive with clear sections
+  - Include definitions, scope, and procedures
+  - Reference effective dates and approval authorities
+  - May include tables for reference data
+
+  ## Structure Requirements
+  {{structure}}
+
+  ## Goals (what questions should this document help answer?)
+  {{goal}}
+
+  ## Seed Data (use this information to make the document realistic)
+  {{seed_content}}
+
+  ## Output Format
+  Generate the document in Markdown format with:
+  - A formal title (# Policy: [Topic])
+  - Policy metadata (effective date, version, department)
+  - Purpose/Scope section
+  - Definitions section if needed
+  - Policy statements organized by section
+  - Procedures or guidelines
+  - Tables where appropriate for structured data
+  - References or related policies
+
+  user:
+  Generate policy document #{{document_number}}. Focus on a specific policy area
+  from the seed data. Make it comprehensive and authoritative.
+

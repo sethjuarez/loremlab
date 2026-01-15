@@ -1,0 +1,47 @@
+# Docxer Project Configuration
+name: hr-policies
+description: |
+  Generate realistic HR policy documents for AI/RAG demonstrations.
+  These documents are designed to answer common employee questions
+  about PTO, benefits, and company policies.
+
+# Directory containing seed markdown files
+seed_data_dir: seed
+
+# Output directory for generated documents
+output_dir: output2
+
+# Goals: What questions should these documents help answer?
+goals:
+  - Answer questions about PTO accrual rates and policies
+  - Explain how to request and track time off
+  - Describe company holidays and office closures
+  - Provide information about employee benefits packages
+  - Clarify policies around remote work and flexible schedules
+
+# Document kinds to generate
+kinds:
+  - name: policy
+    prompt: ../../prompts/policy.yaml
+    count: 2
+    structure:
+      has_tables: true
+      section_count: 5
+      target_length: long
+
+  - name: memo
+    prompt: ../../prompts/memo.yaml
+    count: 3
+    structure:
+      has_tables: false
+      section_count: 1
+      target_length: short
+
+  - name: faq
+    prompt: ../../prompts/faq.yaml
+    count: 2
+    structure:
+      has_tables: false
+      section_count: 3
+      target_length: medium
+

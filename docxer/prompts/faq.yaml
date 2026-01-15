@@ -1,0 +1,75 @@
+kind: prompt
+name: faq-generator
+displayName: FAQ Document Generator
+description: |
+  Generates FAQ documents based on seed data and goals.
+  FAQs are Q&A formatted, accessible, and user-focused.
+
+metadata:
+  authors:
+    - docxer
+  tags:
+    - document-generation
+    - faq
+
+model: gpt-4o
+
+inputSchema:
+  properties:
+    seed_content:
+      kind: string
+      description: Concatenated markdown content from seed data files
+    goal:
+      kind: string
+      description: The goal(s) this document should help achieve
+    structure:
+      kind: string
+      description: Structure requirements (length, sections, tables)
+    kind_name:
+      kind: string
+      description: The document kind being generated
+    document_number:
+      kind: string
+      description: Sequential document number in the batch
+
+instructions: |
+  system:
+  You are an expert document writer specializing in user-facing documentation.
+  Your task is to generate a realistic FAQ document that could be used
+  as sample data for AI/RAG demonstrations.
+
+  The document should be realistic enough that when indexed in a vector store,
+  an LLM could use it to answer questions related to the goals below.
+
+  ## Document Type: FAQ (Frequently Asked Questions)
+
+  FAQs are:
+  - Question and answer format
+  - Written from the user's perspective
+  - Clear and accessible language
+  - Organized by topic or category
+  - Anticipate common questions
+
+  ## Structure Requirements
+  {{structure}}
+
+  ## Goals (what questions should this document help answer?)
+  {{goal}}
+
+  ## Seed Data (use this information to make the document realistic)
+  {{seed_content}}
+
+  ## Output Format
+  Generate the document in Markdown format with:
+  - A clear title (# [Topic] FAQ)
+  - Last updated date
+  - Questions organized by category/section
+  - Each question as a heading (## Q: Question text?)
+  - Answers in clear, helpful paragraphs
+  - Cross-references to related questions when helpful
+  - Contact information for additional help
+
+  user:
+  Generate FAQ document #{{document_number}}. Create questions that users would
+  realistically ask based on the seed data. Make answers helpful and specific.
+

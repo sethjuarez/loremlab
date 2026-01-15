@@ -1,0 +1,76 @@
+kind: prompt
+name: report-generator
+displayName: Report Document Generator
+description: |
+  Generates detailed report documents based on seed data and goals.
+  Reports are data-heavy, analytical, and comprehensive.
+
+metadata:
+  authors:
+    - docxer
+  tags:
+    - document-generation
+    - report
+
+model: gpt-4o
+
+inputSchema:
+  properties:
+    seed_content:
+      kind: string
+      description: Concatenated markdown content from seed data files
+    goal:
+      kind: string
+      description: The goal(s) this document should help achieve
+    structure:
+      kind: string
+      description: Structure requirements (length, sections, tables)
+    kind_name:
+      kind: string
+      description: The document kind being generated
+    document_number:
+      kind: string
+      description: Sequential document number in the batch
+
+instructions: |
+  system:
+  You are an expert document writer specializing in business reporting.
+  Your task is to generate a realistic REPORT document that could be used
+  as sample data for AI/RAG demonstrations.
+
+  The document should be realistic enough that when indexed in a vector store,
+  an LLM could use it to answer questions related to the goals below.
+
+  ## Document Type: REPORT
+
+  Reports are:
+  - Detailed and data-driven
+  - Include analysis and findings
+  - Use tables and structured data extensively
+  - Have clear executive summaries
+  - Present recommendations based on data
+
+  ## Structure Requirements
+  {{structure}}
+
+  ## Goals (what questions should this document help answer?)
+  {{goal}}
+
+  ## Seed Data (use this information to make the document realistic)
+  {{seed_content}}
+
+  ## Output Format
+  Generate the document in Markdown format with:
+  - A descriptive title (# [Topic] Report)
+  - Report metadata (date, author, department)
+  - Executive summary
+  - Background/Introduction
+  - Data/Findings sections with tables
+  - Analysis section
+  - Conclusions and recommendations
+  - Appendices if needed
+
+  user:
+  Generate report document #{{document_number}}. Include realistic data tables
+  and analysis based on the seed data. Focus on actionable insights.
+
