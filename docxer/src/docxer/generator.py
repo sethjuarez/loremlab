@@ -23,6 +23,7 @@ class PromptContext:
     structure: str
     kind_name: str
     document_number: int
+    previous_titles: list[str] | None = None
     additional_context: dict[str, Any] | None = None
 
 
@@ -65,6 +66,13 @@ def render_instructions(agent: PromptAgent, context: PromptContext) -> str:
     """
     instructions = agent.instructions or ""
 
+    # Build previous titles text
+    previous_titles_text = ""
+    if context.previous_titles:
+        previous_titles_text = "\n".join(
+            f"- {title}" for title in context.previous_titles
+        )
+
     # Build substitution map
     variables = {
         "seed_content": context.seed_content,
@@ -72,6 +80,7 @@ def render_instructions(agent: PromptAgent, context: PromptContext) -> str:
         "structure": context.structure,
         "kind_name": context.kind_name,
         "document_number": str(context.document_number),
+        "previous_titles": previous_titles_text,
     }
 
     if context.additional_context:
@@ -252,6 +261,43 @@ class FoundryModelClient:
             ) from e
 
         return response.output_text or ""
+
+
+async def generate_short_title(
+    content: str,
+    client: "ModelClient",
+    model: str | None = None,
+) -> str:
+    """Generate a short filename-friendly title for document content.
+
+    Args:
+        content: The document content (markdown).
+        client: Model client for generation.
+        model: Model to use.
+
+    Returns:
+        A short title (2-5 words) suitable for a filename.
+    """
+    prompt = (
+        """Generate a very short title (2-5 words max) for this document that would make a good filename.
+
+Rules:
+- Use only 2-5 words
+- No special characters
+- Be descriptive but concise
+- Return ONLY the title, nothing else
+
+Document:
+"""
+        + content[:2000]
+    )  # Limit content to avoid token issues
+
+    title = await client.generate(prompt, model=model)
+    # Clean up the response
+    title = title.strip().strip("\"'").strip()
+    # Take only the first line if multiple
+    title = title.split("\n")[0].strip()
+    return title
 
 
 async def generate_content(

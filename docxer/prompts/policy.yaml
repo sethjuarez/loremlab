@@ -59,6 +59,11 @@ instructions: |
   ## Seed Data (use this information to make the document realistic)
   {{seed_content}}
 
+  ## Previously Generated Documents
+  The following documents have already been generated. DO NOT create a document
+  with the same topic or title. Choose a DIFFERENT policy area:
+  {{previous_titles}}
+
   ## Output Format
   Generate the document in Markdown format with:
   - A formal title (# Policy: [Topic])
@@ -72,5 +77,5 @@ instructions: |
 
   user:
   Generate policy document #{{document_number}}. Focus on a specific policy area
-  from the seed data. Make it comprehensive and authoritative.
+  from the seed data that has NOT been covered yet. Make it comprehensive and authoritative.
 

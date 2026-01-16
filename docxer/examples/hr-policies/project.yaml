@@ -22,7 +22,6 @@ goals:
 # Document kinds to generate
 kinds:
   - name: policy
-    prompt: ../../prompts/policy.yaml
     count: 2
     structure:
       has_tables: true
@@ -30,7 +29,6 @@ kinds:
       target_length: long
 
   - name: memo
-    prompt: ../../prompts/memo.yaml
     count: 3
     structure:
       has_tables: false
@@ -38,7 +36,6 @@ kinds:
       target_length: short
 
   - name: faq
-    prompt: ../../prompts/faq.yaml
     count: 2
     structure:
       has_tables: false

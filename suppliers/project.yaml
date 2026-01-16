@@ -1,0 +1,57 @@
+# Docxer Project Configuration
+name: lseg-policies
+description: |
+  Generate realistic supplier policy documents for AI/RAG demonstrations that explain why the following companies
+  should be selected as supplioers based on ESG criteria and supply continuity. These documents are designed to 
+  answer common questions about suppliers in general BUT NOT about any specific company. The policy should focus
+  on why these companies are qualified suppliers based on ESG ratings and supply continuity during disruptions.
+
+  I found 3 qualified alternate suppliers for jet fuel delivery to Solaris Energy Group:
+
+  1. Meridian Fuel Systems (Norway)
+    - ESG Rating: A (Score: 88)
+    - Sanctioned: No
+    - Region: Europe
+    - Location: Stavanger, Norway
+    - Can supply: 88,000 MT annually
+
+  2. Eastern Frontier Energy (Poland)
+    - ESG Rating: A (Score: 82)
+    - Sanctioned: No
+    - Region: Eastern Europe
+    - Location: Warsaw, Poland
+    - Can supply: 82,000 MT annually
+
+  3. GlobalSource Energy (UAE)
+    - ESG Rating: B (Score: 75)
+    - Sanctioned: No
+    - Region: Middle East
+    - Location: Abu Dhabi, UAE
+    - Can supply: 95,000 MT annually
+
+  All three suppliers meet your ESG criteria and can maintain supply continuity during the 30-day disruption period.
+
+# Directory containing seed markdown files
+seed_data_dir: seed
+
+# Output directory for generated documents
+output_dir: output
+
+# Goals: What questions should these documents help answer?
+goals:
+  - Answer questions about company policies and procedures
+  - Explain compliance and regulatory requirements
+  - Describe operational guidelines and best practices
+  - Should NOT answer questions about specific companies or suppliers
+  - Will be used as grounding data for AI/RAG demos
+  - Focus on supplier selection based on ESG criteria and supply continuity
+
+# Document kinds to generate
+kinds:
+  - name: policy
+    count: 3
+    structure:
+      has_tables: true
+      section_count: 5
+      target_length: long
+

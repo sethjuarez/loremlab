@@ -35,13 +35,31 @@ class DocumentKind(BaseModel):
     """Configuration for a specific document kind/type."""
 
     name: str = Field(description="Kind name (e.g., 'memo', 'policy', 'faq')")
-    prompt: str = Field(description="Path to AgentSchema prompt YAML file")
+    prompt: str | None = Field(
+        default=None,
+        description="Path to AgentSchema prompt YAML file. If not specified, uses built-in prompt.",
+    )
     structure: Structure = Field(
         default_factory=Structure, description="Default structure for this kind"
     )
     count: int = Field(
         default=1, ge=1, description="Number of documents of this kind to generate"
     )
+
+    def get_prompt_path(self) -> str:
+        """Get the prompt path, using built-in prompt if not specified."""
+        if self.prompt:
+            return self.prompt
+
+        # Get the prompts directory from the package
+        prompts_dir = Path(__file__).parent.parent.parent / "prompts"
+        builtin_prompt = prompts_dir / f"{self.name}.yaml"
+        if builtin_prompt.exists():
+            return str(builtin_prompt)
+        raise ValueError(
+            f"No prompt specified and no built-in prompt found for kind '{self.name}'. "
+            f"Available kinds: memo, policy, report, faq, email"
+        )
 
     @classmethod
     def with_defaults(cls, name: str, prompt: str) -> "DocumentKind":
@@ -116,10 +134,10 @@ class ProjectConfig(BaseModel):
             if not output_path.is_absolute():
                 data["output_dir"] = str(base_dir / output_path)
 
-        # Resolve prompt paths in kinds
+        # Resolve prompt paths in kinds (only if explicitly specified)
         if "kinds" in data:
             for kind in data["kinds"]:
-                if "prompt" in kind:
+                if "prompt" in kind and kind["prompt"]:
                     prompt_path = Path(kind["prompt"])
                     if not prompt_path.is_absolute():
                         kind["prompt"] = str(base_dir / prompt_path)
